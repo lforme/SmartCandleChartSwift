@@ -1,0 +1,16 @@
+PODS:
+  - SmartCandleChartSwift (1.0.0)
+
+DEPENDENCIES:
+  - SmartCandleChartSwift (from `../`)
+
+EXTERNAL SOURCES:
+  SmartCandleChartSwift:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  SmartCandleChartSwift: 3f38776c4c7e2d93af47e2de77f7e312fc7be34b
+
+PODFILE CHECKSUM: 9190c15764ccb1eda241a0e7d357555b35534b8e
+
+COCOAPODS: 1.14.2

@@ -6,6 +6,7 @@ Pod::Spec.new do |s|
 
   s.description      = <<-DESC
   High performance k-line chart
+  DESC
 
   s.homepage         = 'https://github.com/lforme/SmartCandleChartSwift'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
