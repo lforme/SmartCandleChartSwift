@@ -1,0 +1,8 @@
+use_frameworks!
+
+platform :ios, '13.0'
+
+target 'PROJECT' do
+  pod 'SmartCandleChartSwift', :path => '../'
+
+end
