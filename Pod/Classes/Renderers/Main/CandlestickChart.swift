@@ -42,14 +42,23 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
         let layer = ShapeLayer()
         return layer
     }()
-
+    
+    private lazy var animationView: UIView = {
+        let it = UIView(frame: .zero)
+        it.backgroundColor = .clear
+        return it
+    }()
+    
     /// 创建蜡烛图图表
     /// - Parameter minHeight: 最小高度，默认为 1pt
-    public init(minHeight: CGFloat = 1) { self.minHeight = minHeight }
+    public init(minHeight: CGFloat = 1) {
+        self.minHeight = minHeight
+    }
 
     public func setup(in view: ChartView<Input>) {
         view.layer.addSublayer(upLayer)
         view.layer.addSublayer(downLayer)
+        view.addSubview(animationView)
     }
 
     public func updateZPosition(_ position: CGFloat) {
@@ -66,19 +75,32 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
         for index in context.visibleRange {
             let quote = data[index]
             if quote.open > quote.close {
-                writePath(into: downPath, data: data, context: context, index: index)
+                if data.count - 1 == index {
+                    var lastRect = writePath(into: downPath, data: data, context: context, index: index)
+                    animation(rect: CGRect(x: lastRect.origin.x, y: lastRect.origin.y, width: context.configuration.barWidth, height: lastRect.size.height), color: context.configuration.downColor)
+                    
+                } else {
+                    writePath(into: downPath, data: data, context: context, index: index)
+                    downLayer.path = downPath
+                }
+                
             } else {
-                writePath(into: upPath, data: data, context: context, index: index)
+                if data.count - 1 == index {
+                    var lastRect = writePath(into: upPath, data: data, context: context, index: index)
+                    animation(rect: CGRect(x: lastRect.origin.x, y: lastRect.origin.y, width: context.configuration.barWidth, height: lastRect.size.height), color: context.configuration.upColor)
+                    
+                } else {
+                    writePath(into: upPath, data: data, context: context, index: index)
+                    upLayer.path = upPath
+                }
             }
         }
-
-        upLayer.path = upPath
-        downLayer.path = downPath
     }
 
     public func tearDown(in view: ChartView<Input>) {
         upLayer.removeFromSuperlayer()
         downLayer.removeFromSuperlayer()
+        animationView.removeFromSuperview()
     }
 
     public func extremePoint(contextValues: ContextValues, visibleRange: Range<Int>) -> (min: CGFloat, max: CGFloat)? {
@@ -94,10 +116,11 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
 }
 
 private extension CandlestickChart {
+    @discardableResult
     private func writePath(into path: CGMutablePath,
                            data: [Input],
                            context: RendererContext<Input>,
-                           index: Int)
+                           index: Int) -> CGRect
     {
         let barWidth = context.configuration.barWidth
         let spacing = context.configuration.spacing
@@ -117,6 +140,7 @@ private extension CandlestickChart {
                             width: shadowWidth,
                             context: context)
         path.addRect(lineRect)
+        return barRect
     }
 
     private func rect(for pricePair: (CGFloat, CGFloat), x: CGFloat, width: CGFloat, context: Context) -> CGRect {
@@ -132,5 +156,23 @@ private extension CandlestickChart {
         let minY = context.contentRect.minY
         let peak = context.extremePoint.max - context.extremePoint.min
         return height - height * (price - context.extremePoint.min) / peak + minY
+    }
+    
+    private func animation(rect: CGRect, color: UIColor) {
+        if rect.isNull {
+            return
+        }
+        
+        if animationView.frame == rect {
+            return
+        }
+        animationView.frame.size.width = rect.width
+        animationView.frame.origin.y = rect.origin.y
+        animationView.frame.origin.x = rect.origin.x
+        animationView.backgroundColor = color
+        
+        UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseInOut) {
+            self.animationView.frame.size.height = rect.height
+        }
     }
 }
