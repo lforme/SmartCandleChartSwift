@@ -1,6 +1,6 @@
 //
 //  ReadonlyOffsetArray.swift
-//  
+//
 //
 //  Created by Lforme on 2022/3/17.
 //
@@ -30,7 +30,7 @@ import Foundation
 public struct ReadonlyOffsetArray<Element> {
     public let offset: Int
     var storage: [Element]
-
+    
     /// 创建一个下标被偏移的数组
     ///
     /// realIndex = index - offset
@@ -41,7 +41,7 @@ public struct ReadonlyOffsetArray<Element> {
         self.storage = storage
         self.offset = offset
     }
-
+    
     public subscript(index: Int) -> Element? {
         let realIndex = index - offset
         guard realIndex >= 0, realIndex < storage.count else {
@@ -52,14 +52,14 @@ public struct ReadonlyOffsetArray<Element> {
 }
 
 extension ReadonlyOffsetArray {
-    func realRange(for range: Range<Int>) -> Range<Int> {
+    public func realRange(for range: Range<Int>) -> Range<Int> {
         ((range.lowerBound - offset)..<(range.upperBound - offset))
             .clamped(to: storage.startIndex..<storage.endIndex)
     }
 }
 
 extension ReadonlyOffsetArray {
-    func sliceAndRange(for range: Range<Int>) -> (ArraySlice<Element>, Range<Int>) {
+    public func sliceAndRange(for range: Range<Int>) -> (ArraySlice<Element>, Range<Int>) {
         let realRange = realRange(for: range)
         return (storage[realRange], realRange.startIndex + offset ..< realRange.endIndex + offset)
     }

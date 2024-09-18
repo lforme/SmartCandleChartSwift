@@ -66,14 +66,19 @@ extension RendererContext {
     /// 获取某个 Y 坐标的值在图表中 y 的偏移量
     /// - Parameter value: Y 值
     /// - Returns: 偏移量
-    func yOffset(for value: CGFloat) -> CGFloat {
+    public func yOffset(for value: CGFloat) -> CGFloat {
         let height = contentRect.height
         let minY = contentRect.minY
         let peak = extremePoint.max - extremePoint.min
         return height - height * (value - extremePoint.min) / peak + minY
     }
 
-    func value(forY y: CGFloat) -> CGFloat {
+    /// 获取最新一根k线的x坐标
+    public func xOffsetFetchLatestQuote() -> CGFloat {
+        return layout.quoteMinX(at: data.count - 1)
+    }
+    
+    public func value(forY y: CGFloat) -> CGFloat {
         let peak = extremePoint.max - extremePoint.min
         let height = contentRect.height
         let maxY = contentRect.maxY
