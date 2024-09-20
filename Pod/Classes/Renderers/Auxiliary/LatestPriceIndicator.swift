@@ -220,7 +220,7 @@ public class LatestPriceIndicator<Input: Quote>: ChartRenderer {
         label.frame.size.width = frame.size.width
         label.frame.size.height = frame.size.height
     
-        if label.frame.origin.y != frame.origin.y && !view.isInGestureZoom {
+        if label.frame.origin.y != frame.origin.y && !view.isInGestureZoom && !view.isReload {
             UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseInOut) {
                 self.label.frame.origin.y = frame.origin.y
                 self.lineView2.frame.origin.y = frame.midY

@@ -155,6 +155,7 @@ open class ChartView<Input: Quote>: StockScrollView {
     private var preZoomScale: CGFloat = 1.0
 
     private(set) lazy var isInGestureZoom: Bool = false
+    private(set) lazy var isReload: Bool = false
     
     // MARK: - Life Cycle
 
@@ -187,6 +188,7 @@ open class ChartView<Input: Quote>: StockScrollView {
     /// 重新加载数据
     /// - Parameter data: 数据
     public func reloadData(_ data: [Input]) {
+        isReload = true
         self.data = data
         _reloadData()
         let offset = CGPoint(x: contentSize.width - bounds.size.width + contentInset.right,
@@ -290,6 +292,7 @@ open class ChartView<Input: Quote>: StockScrollView {
             }
         }
         drawPressIndicator(context: context)
+        isReload = false
     }
 
     private func drawPressIndicator(context: Context) {
