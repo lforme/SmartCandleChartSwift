@@ -71,6 +71,17 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
         let data = context.contextValues[QuoteContextKey<Input>.self] ?? []
         upLayer.fillColor = context.configuration.upColor.cgColor
         downLayer.fillColor = context.configuration.downColor.cgColor
+        
+        let maxX = view.contentOffset.x + view.frame.width
+        let _x = context.xOffsetFetchLatestQuote()
+        
+        if maxX - _x <= 0 {
+            animationView.isHidden = true
+            
+        } else {
+            animationView.isHidden = false
+        }
+        
         let upPath = CGMutablePath()
         let downPath = CGMutablePath()
         for index in context.visibleRange {
