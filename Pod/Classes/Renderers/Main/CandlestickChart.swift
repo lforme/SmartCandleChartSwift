@@ -67,6 +67,7 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
     }
 
     public func render(in view: ChartView<Input>, context: Context) {
+        animationView.isHidden = view.isInGestureZoom
         let data = context.contextValues[QuoteContextKey<Input>.self] ?? []
         upLayer.fillColor = context.configuration.upColor.cgColor
         downLayer.fillColor = context.configuration.downColor.cgColor
@@ -75,7 +76,7 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
         for index in context.visibleRange {
             let quote = data[index]
             if quote.open > quote.close {
-                if data.count - 1 == index {
+                if data.count - 1 == index && !view.isInGestureZoom {
                     var lastRect = writePath(into: downPath, data: data, context: context, index: index)
                     animation(rect: CGRect(x: lastRect.origin.x, y: lastRect.origin.y, width: context.configuration.barWidth, height: lastRect.size.height), color: context.configuration.downColor)
                     
@@ -85,7 +86,7 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
                 }
                 
             } else {
-                if data.count - 1 == index {
+                if data.count - 1 == index && !view.isInGestureZoom {
                     var lastRect = writePath(into: upPath, data: data, context: context, index: index)
                     animation(rect: CGRect(x: lastRect.origin.x, y: lastRect.origin.y, width: context.configuration.barWidth, height: lastRect.size.height), color: context.configuration.upColor)
                     

@@ -154,6 +154,8 @@ open class ChartView<Input: Quote>: StockScrollView {
     private var zoomPinnedQuote: (index: Int, midX: CGFloat)?
     private var preZoomScale: CGFloat = 1.0
 
+    private(set) lazy var isInGestureZoom: Bool = false
+    
     // MARK: - Life Cycle
 
     override public init(frame: CGRect) {
@@ -412,12 +414,14 @@ extension ChartView {
     private func handlePinch(gesture: UIPinchGestureRecognizer) {
         switch gesture.state {
         case .began:
+            isInGestureZoom = true
             preZoomScale = 1.0
             let point = gesture.location(in: self)
             let index = layout.quoteIndex(at: point) ?? layout.visibleRange().last
             zoomPinnedQuote = index.flatMap { ($0, layout.quoteMidX(at: $0) - contentOffset.x) }
             fallthrough
         case .changed:
+            isInGestureZoom = true
             guard let (index, midX) = zoomPinnedQuote else { return }
             let scale = gesture.scale / preZoomScale
             chartZoomScale = max(0.3, min(4, chartZoomScale * scale))
@@ -426,6 +430,7 @@ extension ChartView {
             preZoomScale = gesture.scale
         case .ended,
              .cancelled:
+            isInGestureZoom = false
             zoomPinnedQuote = nil
         default:
             break
