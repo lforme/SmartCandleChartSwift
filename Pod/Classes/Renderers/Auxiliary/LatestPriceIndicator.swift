@@ -112,7 +112,7 @@ extension LatestPriceIndicator {
             let insets = contentInsets
             let insetRect = bounds.inset(by: insets)
             let textRect = super.textRect(forBounds: insetRect, limitedToNumberOfLines: numberOfLines)
-            let invertedInsets = UIEdgeInsets(top: insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
+            let invertedInsets = UIEdgeInsets(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
             return textRect.inset(by: invertedInsets)
         }
         
