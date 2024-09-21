@@ -29,6 +29,8 @@ import UIKit
 /// BOLL 参数
 public struct BOLLConfiguration: ContextKey {
     public typealias Value = ReadonlyOffsetArray<BOLLIndicator>
+    
+    public var standardDeviationMultiplier: Int
     /// 观察周期
     public var period: Int
     /// 较低价格指标的颜色
@@ -48,7 +50,8 @@ public struct BOLLConfiguration: ContextKey {
     ///   - lowerColor: 较低价格指标的颜色
     ///   - middleColor: 中间价格指标的颜色
     ///   - upperColor: 较高价格指标的颜色
-    public init(period: Int, lowerColor: UIColor, middleColor: UIColor, upperColor: UIColor, lowerLineWidth: CGFloat = 1, middleLineWidth: CGFloat = 1, upperLineWidth: CGFloat = 1) {
+    public init(period: Int, standardDeviationMultiplier: Int = 2, lowerColor: UIColor, middleColor: UIColor, upperColor: UIColor, lowerLineWidth: CGFloat = 1, middleLineWidth: CGFloat = 1, upperLineWidth: CGFloat = 1) {
+        self.standardDeviationMultiplier = standardDeviationMultiplier
         self.upperLineWidth = upperLineWidth
         self.lowerLineWidth = lowerLineWidth
         self.middleLineWidth = middleLineWidth
@@ -75,7 +78,7 @@ public class BOLLChart<Input: Quote>: ChartRenderer {
     public init(configuration: BOLLConfiguration) {
         self.configuration = configuration
         self.quoteProcessor = .init(id: configuration,
-                                    algorithm: .init(period: configuration.period))
+                                    algorithm: .init(period: configuration.period, standardDeviationMultiplier: CGFloat(configuration.standardDeviationMultiplier)))
     }
 
     public func updateZPosition(_ position: CGFloat) {
@@ -128,7 +131,7 @@ public class BOLLChart<Input: Quote>: ChartRenderer {
         let font = context.configuration.captionFont
         return [
             captionText(for: \.middle, value: value, title: "MB", formatter: context.preferredFormatter, color: configuration.middleColor, font: font),
-            captionText(for: \.lower, value: value, title: "LB", formatter: context.preferredFormatter, color: configuration.lowerColor, font: font),
+            captionText(for: \.lower, value: value, title: "DN", formatter: context.preferredFormatter, color: configuration.lowerColor, font: font),
             captionText(for: \.upper, value: value, title: "UB", formatter: context.preferredFormatter, color: configuration.upperColor, font: font)
         ]
     }

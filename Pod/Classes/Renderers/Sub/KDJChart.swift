@@ -30,7 +30,9 @@ import UIKit
 public struct KDJConfiguration: ContextKey {
     public typealias Value = ReadonlyOffsetArray<KDJIndicator>
     /// 观察周期
-    public var period: Int = 9
+    public var k: Int
+    public var d: Int
+    public var j: Int
     public var kColor: UIColor
     public var dColor: UIColor
     public var jColor: UIColor
@@ -40,12 +42,14 @@ public struct KDJConfiguration: ContextKey {
 
     /// 创建一个 KDJ 配置
     /// - Parameters:
-    ///   - period: 观察周期，默认为 9，也就是 KDJ(9,3,3)
+    ///   - period: 观察周期
     ///   - kColor: K 值折线图的颜色
     ///   - dColor: D 值折线图的颜色
     ///   - jColor: J 值折线图的颜色
-    public init(period: Int = 9, kColor: UIColor, dColor: UIColor, jColor: UIColor, kLineWidth: CGFloat = 1, dLineWidth: CGFloat = 1, jLineWidth: CGFloat = 1) {
-        self.period = period
+    public init(k: Int, d: Int, j: Int, kColor: UIColor, dColor: UIColor, jColor: UIColor, kLineWidth: CGFloat = 1, dLineWidth: CGFloat = 1, jLineWidth: CGFloat = 1) {
+        self.k = k
+        self.d = d
+        self.j = j
         self.kColor = kColor
         self.dColor = dColor
         self.jColor = jColor
@@ -72,7 +76,7 @@ public class KDJChart<Input: Quote>: ChartRenderer {
         self.legendConfigBlock = legendConfigBlock
         self.configuration = configuration
         self.quoteProcessor = .init(id: configuration,
-                                    algorithm: .init(period: configuration.period))
+                                    algorithm: .init(period: configuration.k, kPeriod: configuration.j, dPeriod: configuration.d))
         kLayer.strokeColor = configuration.kColor.cgColor
         dLayer.strokeColor = configuration.dColor.cgColor
         jLayer.strokeColor = configuration.jColor.cgColor
@@ -127,30 +131,30 @@ public class KDJChart<Input: Quote>: ChartRenderer {
     }
 
     public func captions(quoteIndex: Int, context: Context) -> [NSAttributedString] {
-//        let value = context.contextValues[configuration]?[quoteIndex]
-//        let font = context.configuration.captionFont
-//        let formatter = context.preferredFormatter
-//        return [
-//            captionText(value: value?.k, title: "K", formatter: formatter, color: configuration.kColor, font: font),
-//            captionText(value: value?.d, title: "D", formatter: formatter, color: configuration.dColor, font: font),
-//            captionText(value: value?.j, title: "J", formatter: formatter, color: configuration.jColor, font: font)
-//        ]
+        let value = context.contextValues[configuration]?[quoteIndex]
+        let font = context.configuration.captionFont
+        let formatter = context.preferredFormatter
+        return [
+            captionText(value: value?.k, title: "K", formatter: formatter, color: configuration.kColor, font: font),
+            captionText(value: value?.d, title: "D", formatter: formatter, color: configuration.dColor, font: font),
+            captionText(value: value?.j, title: "J", formatter: formatter, color: configuration.jColor, font: font)
+        ]
         
         return legendConfigBlock?(quoteIndex, context) ?? []
         
     }
 
-//    private func captionText(value: CGFloat?,
-//                             title: String,
-//                             formatter: NumberFormatting,
-//                             color: UIColor,
-//                             font: UIFont) -> NSAttributedString
-//    {
-//        let text = value.flatMap { formatter.format($0) } ?? "--"
-//        return NSAttributedString(string: "\(title):\(text)",
-//                                  attributes: [
-//                                      .foregroundColor: color,
-//                                      .font: font
-//                                  ])
-//    }
+    private func captionText(value: CGFloat?,
+                             title: String,
+                             formatter: NumberFormatting,
+                             color: UIColor,
+                             font: UIFont) -> NSAttributedString
+    {
+        let text = value.flatMap { formatter.format($0) } ?? "--"
+        return NSAttributedString(string: "\(title):\(text)",
+                                  attributes: [
+                                      .foregroundColor: color,
+                                      .font: font
+                                  ])
+    }
 }

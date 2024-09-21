@@ -74,11 +74,32 @@ extension LatestPriceIndicator {
 extension LatestPriceIndicator {
     
     class Label: UILabel {
+
+        var priceDecimal: Int = 0
         
         var contentInsets: UIEdgeInsets = .zero {
             didSet {
                 setNeedsLayout()
                 invalidateIntrinsicContentSize()
+            }
+        }
+        
+        private var displayLink: CADisplayLink?
+        private lazy var startValue: Double = 0
+        private lazy var endValue: Double = 0
+        private lazy var duration: TimeInterval = 0.4
+        private lazy var startTime: CFTimeInterval = 0
+        
+        deinit {
+            displayLink?.invalidate()
+            displayLink = nil
+        }
+        
+        override var text: String? {
+            didSet {
+                guard let value = Double(text ?? "0") else { return }
+                let old = Double(oldValue ?? "0") ?? 0
+                startAnimation(oldValue: old, newValue: value)
             }
         }
         
@@ -101,6 +122,34 @@ extension LatestPriceIndicator {
             let height = size.height + contentInsets.top + contentInsets.bottom
             return CGSize(width: width, height: height)
         }
+        
+        private func startAnimation(oldValue: Double, newValue: Double) {
+            displayLink?.invalidate()
+            
+            startValue = oldValue
+            endValue = newValue
+            startTime = CACurrentMediaTime()
+            
+            displayLink = CADisplayLink(target: self, selector: #selector(LatestPriceIndicator.Label.updateValue))
+            displayLink?.add(to: .main, forMode: .common)
+        }
+        
+        @objc
+        private func updateValue() {
+            let currentTime = CACurrentMediaTime()
+            let elapsedTime = currentTime - startTime
+            
+            if elapsedTime >= duration {
+                super.text = String(format: "%.\(priceDecimal)f", endValue)
+                displayLink?.invalidate()
+                displayLink = nil
+                
+            } else {
+                let percentage = elapsedTime / duration
+                let value = startValue + (endValue - startValue) * percentage
+                super.text = String(format: "%.\(priceDecimal)f", value)
+            }
+        }
     }
     
 }
@@ -108,6 +157,8 @@ extension LatestPriceIndicator {
 
 /// 用于绘制最新成交价格
 public class LatestPriceIndicator<Input: Quote>: ChartRenderer {
+    
+    public lazy var priceDecimal: Int = 0
     
     public lazy var textColor: UIColor = .black {
         didSet {
@@ -204,6 +255,7 @@ public class LatestPriceIndicator<Input: Quote>: ChartRenderer {
         
         label.isHidden = false
         label.text = context.preferredFormatter.format(last.close)
+        label.priceDecimal = priceDecimal
         
         let y = context.yOffset(for: last.close)
         var size = label.sizeThatFits(.init(width: maxWidth, height: height))
