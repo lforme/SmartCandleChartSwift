@@ -41,6 +41,8 @@ public struct MACDConfiguration: ContextKey {
     public var longDecreasingIsHollow: Bool
     public var shortIncreasingIsHollow: Bool
     public var shortDecreasingIsHollow: Bool
+    public var showDIF: Bool
+    public var showDEA: Bool
     
     /// 创建一个 MACD 配置信息，默认为 MACD(12, 26, 9)
     /// - Parameters:
@@ -61,7 +63,9 @@ public struct MACDConfiguration: ContextKey {
                 longIncreasingIsHollow: Bool = false,
                 longDecreasingIsHollow: Bool = false,
                 shortIncreasingIsHollow: Bool = false,
-                shortDecreasingIsHollow: Bool = false)
+                shortDecreasingIsHollow: Bool = false,
+                showDIF: Bool = true,
+                showDEA: Bool = true)
     {
         self.shorterPeroid = shorterPeroid
         self.longerPeroid = longerPeroid
@@ -75,27 +79,56 @@ public struct MACDConfiguration: ContextKey {
         self.longDecreasingIsHollow = longDecreasingIsHollow
         self.shortIncreasingIsHollow = shortIncreasingIsHollow
         self.shortDecreasingIsHollow = shortDecreasingIsHollow
+        self.showDEA = showDEA
+        self.showDIF = showDIF
     }
 }
 
 /// MACD 图表
 public class MACDChart<Input: Quote>: ChartRenderer {
+ 
     public typealias Input = Input
     public typealias QuoteProcessor = IndicatorQuoteProcessor<Input, MACDIndicator, MACDConfiguration, MACDAlgorithm<Input>>
     public let quoteProcessor: QuoteProcessor?
 
     private let configuration: MACDConfiguration
-    private var upHistogramLayer = ShapeLayer()
-    private var downHistogramLayer = ShapeLayer()
+    
+    private lazy var upLayer: ShapeLayer = {
+        let it = ShapeLayer()
+        return it
+    }()
+    
+    private var downLayer: ShapeLayer = {
+        let it = ShapeLayer()
+        return it
+    }()
+    
+    private lazy var upHollowLayer: ShapeLayer = {
+        let it = ShapeLayer()
+        it.lineWidth = 1
+        return it
+    }()
+    
+    private var downHollowLayer: ShapeLayer = {
+        let it = ShapeLayer()
+        it.lineWidth = 1
+        return it
+    }()
+    
+    
     private let diffLayer = LineChartLayer()
     private let deaLayer = LineChartLayer()
 
-    public var legendConfigBlock: ((Int, Context) -> [NSAttributedString])?
+    private let upColor: UIColor
+    private let downColor: UIColor
+    private let macdLegendColor: UIColor
     
     /// 创建 MACD 图表
     /// - Parameter configuration: 配置信息
-    public init(configuration: MACDConfiguration, legendConfigBlock: ((Int, Context) -> [NSAttributedString])?) {
-        self.legendConfigBlock = legendConfigBlock
+    public init(configuration: MACDConfiguration, macdLegendColor: UIColor, upColor: UIColor, downColor: UIColor) {
+        self.macdLegendColor = macdLegendColor
+        self.upColor = upColor
+        self.downColor = downColor
         self.configuration = configuration
         self.quoteProcessor = .init(id: configuration,
                                     algorithm: .init(
@@ -107,15 +140,19 @@ public class MACDChart<Input: Quote>: ChartRenderer {
     }
 
     public func updateZPosition(_ position: CGFloat) {
-        upHistogramLayer.zPosition = position
-        downHistogramLayer.zPosition = position
+        upHollowLayer.zPosition = position
+        downHollowLayer.zPosition = position
+        upLayer.zPosition = position
+        downLayer.zPosition = position
         diffLayer.zPosition = position + 0.1
         deaLayer.zPosition = position + 0.2
     }
 
     public func setup(in view: ChartView<Input>) {
-        view.layer.addSublayer(upHistogramLayer)
-        view.layer.addSublayer(downHistogramLayer)
+        view.layer.addSublayer(upLayer)
+        view.layer.addSublayer(downLayer)
+        view.layer.addSublayer(upHollowLayer)
+        view.layer.addSublayer(downHollowLayer)
         view.layer.addSublayer(diffLayer)
         view.layer.addSublayer(deaLayer)
     }
@@ -125,88 +162,279 @@ public class MACDChart<Input: Quote>: ChartRenderer {
             clear()
             return
         }
-        diffLayer.lineWidth = configuration.diffLineWidth
-        deaLayer.lineWidth = configuration.deaLineWidth
-        diffLayer.update(with: context,
-                         indicatorValues: values,
-                         keyPath: \.diff,
-                         color: configuration.diffColor, lineWidth: configuration.diffLineWidth)
-        deaLayer.update(with: context,
-                        indicatorValues: values,
-                        keyPath: \.dea,
-                        color: configuration.deaColor, lineWidth: configuration.deaLineWidth)
+        if configuration.showDEA {
+            deaLayer.update(with: context,
+                            indicatorValues: values,
+                            keyPath: \.dea,
+                            color: configuration.deaColor, lineWidth: configuration.deaLineWidth)
+            
+        }
+   
+        if configuration.showDIF {
+            diffLayer.update(with: context,
+                             indicatorValues: values,
+                             keyPath: \.diff,
+                             color: configuration.diffColor, lineWidth: configuration.diffLineWidth)
+        }
+     
         rendererHistogram(context: context, values: values)
     }
 
     private func clear() {
-        upHistogramLayer.clear()
-        downHistogramLayer.clear()
+        upLayer.clear()
+        upLayer.clear()
+        upHollowLayer.clear()
+        downHollowLayer.clear()
         diffLayer.clear()
         deaLayer.clear()
     }
 
     public func tearDown(in view: ChartView<Input>) {
-        upHistogramLayer.removeFromSuperlayer()
-        downHistogramLayer.removeFromSuperlayer()
+        upLayer.removeFromSuperlayer()
+        downLayer.removeFromSuperlayer()
+        upHollowLayer.removeFromSuperlayer()
+        downHollowLayer.removeFromSuperlayer()
         diffLayer.removeFromSuperlayer()
         deaLayer.removeFromSuperlayer()
     }
 
     public func captions(quoteIndex: Int, context: Context) -> [NSAttributedString] {
-//        let value = context.contextValues[configuration]?[quoteIndex]
-//        let font = context.configuration.captionFont
-//        let macd = "MACD(\(configuration.shorterPeroid),\(configuration.longerPeroid),\(configuration.deaPeroid))"
-//        let formatter = context.preferredFormatter
-//        return [
-//            captionText(value: value?.diff, title: "DIF", formatter: formatter, color: configuration.diffColor, font: font),
-//            captionText(value: value?.dea, title: "DEA", formatter: formatter, color: configuration.deaColor, font: font),
-//            captionText(value: value?.histogram, title: macd, formatter: formatter, color: context.configuration.captionColor, font: font)
-//        ]
+        let value = context.contextValues[configuration]?[quoteIndex]
+        let font = context.configuration.captionFont
+        let macd = "MACD(\(configuration.shorterPeroid),\(configuration.longerPeroid),\(configuration.deaPeroid))"
         
-        return legendConfigBlock?(quoteIndex, context) ?? []
+        let macdDes = NSMutableAttributedString(attributedString: NSAttributedString.init(string: macd, attributes: [NSAttributedString.Key.font: font, NSAttributedString.Key.foregroundColor: context.configuration.captionColor]))
         
+        let formatter = context.preferredFormatter
+
+        return [
+            macdDes,
+            captionText(value: value?.histogram, title: "MACD", formatter: formatter, color: macdLegendColor, font: font),
+            captionText(value: value?.diff, title: "DIF", formatter: formatter, color: configuration.diffColor, font: font),
+            captionText(value: value?.dea, title: "DEA", formatter: formatter, color: configuration.deaColor, font: font)
+        ]
     }
 
-//    private func captionText(value: CGFloat?,
-//                             title: String,
-//                             formatter: NumberFormatting,
-//                             color: UIColor,
-//                             font: UIFont) -> NSAttributedString
-//    {
-//        let text = value.flatMap { formatter.format($0) } ?? "--"
-//        return NSAttributedString(string: "\(title):\(text)",
-//                                  attributes: [
-//                                      .foregroundColor: color,
-//                                      .font: font
-//                                  ])
-//    }
+    private func captionText(value: CGFloat?,
+                             title: String,
+                             formatter: NumberFormatting,
+                             color: UIColor,
+                             font: UIFont) -> NSAttributedString
+    {
+        let text = value.flatMap { formatter.format($0) } ?? "--"
+        return NSAttributedString(string: "\(title):\(text)",
+                                  attributes: [
+                                      .foregroundColor: color,
+                                      .font: font
+                                  ])
+    }
 }
 
 // MARK: - Renderer Histogram
 
 extension MACDChart {
     private func rendererHistogram(context: Context, values: ReadonlyOffsetArray<MACDIndicator>) {
-        let (slice, range) = values.sliceAndRange(for: context.visibleRange)
         let upPath = CGMutablePath()
+        let upHollowPath = CGMutablePath()
         let downPath = CGMutablePath()
-        defer {
-            upHistogramLayer.fillColor = context.configuration.upColor.cgColor
-            downHistogramLayer.fillColor = context.configuration.downColor.cgColor
-            upHistogramLayer.path = upPath
-            downHistogramLayer.path = downPath
-        }
+        let downHollowPath = CGMutablePath()
         let peak = context.extremePoint.max - context.extremePoint.min
         guard peak > 0 else { return }
         let zeroY = yOffset(for: 0, context: context)
-        zip(slice, range).forEach { macd, index in
-            guard let macd = macd.histogram else { return }
-            if macd >= 0 {
-                writePath(into: upPath, macd: macd, context: context, index: index, zeroY: zeroY)
-            } else {
-                writePath(into: downPath, macd: macd, context: context, index: index, zeroY: zeroY)
+        let (slice, range) = values.sliceAndRange(for: context.visibleRange)
+        
+        var res = values.storage
+        let count = range.upperBound - res.count
+        if count > 0 {
+            let alignment = (0..<count).map { _ in
+                return MACDIndicator.init(diff: 0, dea: 0, histogram: 0)
+            }
+            res.insert(contentsOf: alignment, at: 0)
+        }
+        
+        zip(range, slice).forEach { index, macd in
+     
+            let macd = macd.histogram ?? 0
+            if let preMacd = res.safeObjec(index)?.histogram  {
+                
+                if (preMacd > 0 && macd > 0) { // 多
+                    if macd > preMacd { // 显示空心
+                        if configuration.longIncreasingIsHollow {
+                            writePath(into: upHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            upHollowLayer.path = upHollowPath
+                            upHollowLayer.strokeColor = upColor.cgColor
+                            upHollowLayer.fillColor = UIColor.clear.cgColor
+                            
+                        } else {
+                            writePath(into: upPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            upLayer.path = upPath
+                            upLayer.strokeColor = UIColor.clear.cgColor
+                            upLayer.fillColor = upColor.cgColor
+                        }
+                        
+                    } else { // 显示实心
+                        if configuration.longDecreasingIsHollow {
+                            writePath(into: upHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            upHollowLayer.path = upHollowPath
+                            upHollowLayer.strokeColor = upColor.cgColor
+                            upHollowLayer.fillColor = UIColor.clear.cgColor
+                            
+                        } else {
+                            writePath(into: upPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            upLayer.path = upPath
+                            upLayer.strokeColor = UIColor.clear.cgColor
+                            upLayer.fillColor = upColor.cgColor
+                        }
+                    }
+                    
+                    
+                } else if (preMacd < 0 && macd < 0) { // 空
+                    if macd > preMacd { // 显示空心
+                        if configuration.longIncreasingIsHollow {
+                            writePath(into: downHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            downHollowLayer.path = downHollowPath
+                            downHollowLayer.strokeColor = downColor.cgColor
+                            downHollowLayer.fillColor = UIColor.clear.cgColor
+                            
+                        } else {
+                            writePath(into: downPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            downLayer.path = downPath
+                            downLayer.strokeColor = UIColor.clear.cgColor
+                            downLayer.fillColor = downColor.cgColor
+                        }
+                     
+                        
+                    } else { // 显示实心
+                        if configuration.longDecreasingIsHollow {
+                            writePath(into: downHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            downHollowLayer.path = downHollowPath
+                            downHollowLayer.strokeColor = downColor.cgColor
+                            downHollowLayer.fillColor = UIColor.clear.cgColor
+                            
+                        } else {
+                            writePath(into: downPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            downLayer.path = downPath
+                            downLayer.strokeColor = UIColor.clear.cgColor
+                            downLayer.fillColor = downColor.cgColor
+                        }
+                    }
+                    
+                } else { // 显示实心
+                    if (macd > 0) { // 多
+                        if configuration.longIncreasingIsHollow {
+                            writePath(into: upHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            upHollowLayer.path = upHollowPath
+                            upHollowLayer.strokeColor = upColor.cgColor
+                            upHollowLayer.fillColor = UIColor.clear.cgColor
+                            
+                        } else {
+                            writePath(into: upPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            upLayer.path = upPath
+                            upLayer.strokeColor = UIColor.clear.cgColor
+                            upLayer.fillColor = upColor.cgColor
+                        }
+                        
+                        if configuration.longDecreasingIsHollow {
+                            writePath(into: upHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            upHollowLayer.path = upHollowPath
+                            upHollowLayer.strokeColor = upColor.cgColor
+                            upHollowLayer.fillColor = UIColor.clear.cgColor
+                            
+                        } else {
+                            writePath(into: upPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            upLayer.path = upPath
+                            upLayer.strokeColor = UIColor.clear.cgColor
+                            upLayer.fillColor = upColor.cgColor
+                        }
+     
+                    } else {
+                        if configuration.shortIncreasingIsHollow {
+                            writePath(into: downHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            downHollowLayer.path = downHollowPath
+                            downHollowLayer.strokeColor = downColor.cgColor
+                            downHollowLayer.fillColor = UIColor.clear.cgColor
+                            
+                        } else {
+                            writePath(into: downPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            downLayer.path = downPath
+                            downLayer.strokeColor = UIColor.clear.cgColor
+                            downLayer.fillColor = downColor.cgColor
+                        }
+                        
+                        if configuration.shortDecreasingIsHollow {
+                            writePath(into: downHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            downHollowLayer.path = downHollowPath
+                            downHollowLayer.strokeColor = downColor.cgColor
+                            downHollowLayer.fillColor = UIColor.clear.cgColor
+                            
+                        } else {
+                            writePath(into: downPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                            downLayer.path = downPath
+                            downLayer.strokeColor = UIColor.clear.cgColor
+                            downLayer.fillColor = downColor.cgColor
+                        }
+                    }
+                }
+                
+            } else { // 显示实心
+                if (macd > 0) { // 多
+                    if configuration.longIncreasingIsHollow {
+                        writePath(into: upHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                        upHollowLayer.path = upHollowPath
+                        upHollowLayer.strokeColor = upColor.cgColor
+                        upHollowLayer.fillColor = UIColor.clear.cgColor
+                        
+                    } else {
+                        writePath(into: upPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                        upLayer.path = upPath
+                        upLayer.strokeColor = UIColor.clear.cgColor
+                        upLayer.fillColor = upColor.cgColor
+                    }
+                    
+                    if configuration.longDecreasingIsHollow {
+                        writePath(into: upHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                        upHollowLayer.path = upHollowPath
+                        upHollowLayer.strokeColor = upColor.cgColor
+                        upHollowLayer.fillColor = UIColor.clear.cgColor
+                        
+                    } else {
+                        writePath(into: upPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                        upLayer.path = upPath
+                        upLayer.strokeColor = UIColor.clear.cgColor
+                        upLayer.fillColor = upColor.cgColor
+                    }
+ 
+                } else {
+                    if configuration.shortIncreasingIsHollow {
+                        writePath(into: downHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                        downHollowLayer.path = downHollowPath
+                        downHollowLayer.strokeColor = downColor.cgColor
+                        downHollowLayer.fillColor = UIColor.clear.cgColor
+                        
+                    } else {
+                        writePath(into: downPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                        downLayer.path = downPath
+                        downLayer.strokeColor = UIColor.clear.cgColor
+                        downLayer.fillColor = downColor.cgColor
+                    }
+                    
+                    if configuration.shortDecreasingIsHollow {
+                        writePath(into: downHollowPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                        downHollowLayer.path = downHollowPath
+                        downHollowLayer.strokeColor = downColor.cgColor
+                        downHollowLayer.fillColor = UIColor.clear.cgColor
+                        
+                    } else {
+                        writePath(into: downPath, macd: macd, context: context, index: index, zeroY: zeroY)
+                        downLayer.path = downPath
+                        downLayer.strokeColor = UIColor.clear.cgColor
+                        downLayer.fillColor = downColor.cgColor
+                    }
+                }
             }
         }
     }
+
 
     private func writePath(into path: CGMutablePath,
                            macd: CGFloat,
@@ -242,5 +470,18 @@ extension MACDChart {
         let minY = context.contentRect.minY
         let peak = context.extremePoint.max - context.extremePoint.min
         return height - height * (price - context.extremePoint.min) / peak + minY
+    }
+}
+
+private extension Array {
+    
+    func safeObjec(_ index: Int) -> Element? {
+        return (0..<count).contains(index) ? self[index] : nil
+    }
+    
+    mutating func safeRemove(_ index: Int) {
+        if (0..<count).contains(index) {
+            remove(at: index)
+        }
     }
 }

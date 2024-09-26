@@ -68,13 +68,16 @@ public struct MACDAlgorithm<Input: Quote>: AnalysisAlgorithm {
 
     public func process(_ data: [Input]) -> [MACDIndicator] {
         guard data.count >= longerPeroid else { return [] }
-        // EMA(close, 12)
+        
         let ema12 = ExponentialMovingAverageAlgorithm(period: shorterPeroid)
             .process(data)
             .dropFirst(longerPeroid - shorterPeroid)
-        // EMA(close, 26)
+        
         let ema26 = ExponentialMovingAverageAlgorithm(period: longerPeroid).process(data)
+        
         assert(ema12.count == ema26.count)
+        
+        
         let diff = zip(ema12, ema26).map(-)
         let deaEMA = EMACaculator(period: deaPeroid).process(diff)
         var result: [MACDIndicator] = []

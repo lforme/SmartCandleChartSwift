@@ -29,7 +29,7 @@ import Foundation
 
 public struct ReadonlyOffsetArray<Element> {
     public let offset: Int
-    var storage: [Element]
+    public private(set) var storage: [Element]
     
     /// 创建一个下标被偏移的数组
     ///
