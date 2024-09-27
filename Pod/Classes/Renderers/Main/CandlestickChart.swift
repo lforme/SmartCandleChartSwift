@@ -86,6 +86,8 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
                     var lastRect = writePath(into: downPath, data: data, context: context, index: index)
                     animation(rect: CGRect(x: lastRect.origin.x, y: lastRect.origin.y, width: context.configuration.barWidth, height: lastRect.size.height), color: context.configuration.downColor)
                     
+                    onlyWriteShadow(into: downPath, data: data, context: context, index: index, layer: downLayer)
+                    
                 } else {
                     writePath(into: downPath, data: data, context: context, index: index)
                     downLayer.path = downPath
@@ -95,6 +97,8 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
                 if data.count - 1 == index && !view.isInGestureZoom && !view.isReload {
                     var lastRect = writePath(into: upPath, data: data, context: context, index: index)
                     animation(rect: CGRect(x: lastRect.origin.x, y: lastRect.origin.y, width: context.configuration.barWidth, height: lastRect.size.height), color: context.configuration.upColor)
+                    
+                    onlyWriteShadow(into: upPath, data: data, context: context, index: index, layer: upLayer)
                     
                 } else {
                     writePath(into: upPath, data: data, context: context, index: index)
@@ -123,6 +127,27 @@ public final class CandlestickChart<Input: Quote>: ChartRenderer {
 }
 
 private extension CandlestickChart {
+    
+    private func onlyWriteShadow(into path: CGMutablePath,
+                                 data: [Input],
+                                 context: RendererContext<Input>,
+                                 index: Int, layer: ShapeLayer) {
+        let barWidth = context.configuration.barWidth
+        let spacing = context.configuration.spacing
+        let shadowWidth = context.configuration.shadowLineWidth
+        let quote = data[index]
+        let barX = (barWidth + spacing) * CGFloat(index)
+
+        let lineX = barX + (barWidth - shadowWidth) / 2
+
+        let lineRect = rect(for: (quote.low, quote.high),
+                            x: _pixelCeil(lineX),
+                            width: shadowWidth,
+                            context: context)
+        path.addRect(lineRect)
+        layer.path = path
+    }
+    
     @discardableResult
     private func writePath(into path: CGMutablePath,
                            data: [Input],
