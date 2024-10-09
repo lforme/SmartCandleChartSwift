@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   
   s.ios.deployment_target = '13.0'
 
-  s.source_files = 'Pod/Classes/**/*'
+  s.vendored_frameworks = 'Pod/SmartCandleChart.xcframework'
   
   s.frameworks = 'UIKit'
   

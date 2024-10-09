@@ -1,0 +1,980 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 5.10 (swiftlang-5.10.0.13 clang-1500.3.9.4)
+// swift-module-flags: -target arm64-apple-ios13.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-bare-slash-regex -module-name SmartCandleChart
+import CoreGraphics
+import Foundation
+import Network
+@_exported import SmartCandleChart
+import Swift
+import UIKit
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+public protocol AnalysisAlgorithm {
+  associatedtype Input : SmartCandleChart.Quote
+  associatedtype Output
+  func process(_ data: [Self.Input]) -> Self.Output
+}
+public struct AnyAnalysisAlgorithm<Input> where Input : SmartCandleChart.Quote {
+  public init<A>(_ algorithm: A) where Input == A.Input, A : SmartCandleChart.AnalysisAlgorithm
+}
+extension SmartCandleChart.AnalysisAlgorithm {
+  public var typeErased: SmartCandleChart.AnyAnalysisAlgorithm<Self.Input> {
+    get
+  }
+}
+public struct Patch<V> where V : Swift.Hashable {
+  public var deletions: Swift.Set<V>
+  public var insertions: Swift.Set<V>
+}
+extension Swift.Set {
+  public func patches(to another: Swift.Set<Element>) -> SmartCandleChart.Patch<Element>
+  public func patches(from another: Swift.Set<Element>) -> SmartCandleChart.Patch<Element>
+}
+public class LatestPriceIndicator<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public var priceDecimal: Swift.Int {
+    get
+    set
+  }
+  public var textColor: UIKit.UIColor {
+    get
+    set
+  }
+  public var textBackgroundColor: UIKit.UIColor {
+    get
+    set
+  }
+  public var textBorderColor: UIKit.UIColor {
+    get
+    set
+  }
+  public var dashLineColor: UIKit.UIColor {
+    get
+    set
+  }
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  public init(height: CoreFoundation.CGFloat = 18, minWidth: CoreFoundation.CGFloat = 36, maxWidth: CoreFoundation.CGFloat = 80)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.LatestPriceIndicator<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  @objc deinit
+}
+public struct Binding<V> {
+  public var wrappedValue: V {
+    get
+    set
+  }
+  public init(get: @escaping () -> V, set: @escaping (V) -> Swift.Void)
+}
+final public class ExtremePriceIndicator<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  public init(color: UIKit.UIColor)
+  final public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  final public func setup(in view: SmartCandleChart.ChartView<Input>)
+  final public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.ExtremePriceIndicator<Input>.Context)
+  final public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  final public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  @objc deinit
+}
+public struct BOLLConfiguration : SmartCandleChart.ContextKey {
+  public typealias Value = SmartCandleChart.ReadonlyOffsetArray<SmartCandleChart.BOLLIndicator>
+  public var standardDeviationMultiplier: Swift.Int
+  public var period: Swift.Int
+  public var lowerColor: UIKit.UIColor
+  public var middleColor: UIKit.UIColor
+  public var upperColor: UIKit.UIColor
+  public var lowerLineWidth: CoreFoundation.CGFloat
+  public var middleLineWidth: CoreFoundation.CGFloat
+  public var upperLineWidth: CoreFoundation.CGFloat
+  public init(period: Swift.Int, standardDeviationMultiplier: Swift.Int = 2, lowerColor: UIKit.UIColor, middleColor: UIKit.UIColor, upperColor: UIKit.UIColor, lowerLineWidth: CoreFoundation.CGFloat = 1, middleLineWidth: CoreFoundation.CGFloat = 1, upperLineWidth: CoreFoundation.CGFloat = 1)
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.BOLLConfiguration, b: SmartCandleChart.BOLLConfiguration) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public class BOLLChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.IndicatorQuoteProcessor<Input, SmartCandleChart.BOLLIndicator, SmartCandleChart.BOLLConfiguration, SmartCandleChart.BollingerBandsAlgorithm<Input>>
+  final public let quoteProcessor: SmartCandleChart.IndicatorQuoteProcessor<Input, SmartCandleChart.BOLLIndicator, SmartCandleChart.BOLLConfiguration, SmartCandleChart.BollingerBandsAlgorithm<Input>>?
+  public init(configuration: SmartCandleChart.BOLLConfiguration)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.BOLLChart<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.BOLLChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+public protocol NumberFormatting {
+  func format(_ value: CoreFoundation.CGFloat) -> Swift.String
+}
+public struct DefaultPriceFormatter : SmartCandleChart.NumberFormatting {
+  public var significantDigits: Swift.Int
+  public var minimumFractionDigits: Swift.Int
+  public init(significantDigits: Swift.Int = 4, minimumFractionDigits: Swift.Int = 2)
+  public func format(_ value: CoreFoundation.CGFloat) -> Swift.String
+}
+extension Foundation.NumberFormatter : SmartCandleChart.NumberFormatting {
+  public func format(_ value: CoreFoundation.CGFloat) -> Swift.String
+}
+public struct DefaultVolumeFormatter : SmartCandleChart.NumberFormatting {
+  public func format(_ value: CoreFoundation.CGFloat) -> Swift.String
+}
+extension SmartCandleChart.NumberFormatting where Self == SmartCandleChart.DefaultPriceFormatter {
+  public static func defaultPrice(significantDigits: Swift.Int = 4, minimumFractionDigits: Swift.Int = 2) -> SmartCandleChart.DefaultPriceFormatter
+}
+extension SmartCandleChart.NumberFormatting where Self == SmartCandleChart.DefaultVolumeFormatter {
+  public static var volume: SmartCandleChart.DefaultVolumeFormatter {
+    get
+  }
+}
+extension SmartCandleChart.NumberFormatting where Self == Foundation.NumberFormatter {
+  public static func maximumFractionDigits(_ limit: Swift.Int) -> Foundation.NumberFormatter
+  public static func maximumSignificantDigits(_ limit: Swift.Int) -> Foundation.NumberFormatter
+}
+@objc @_inheritsConvenienceInitializers @_Concurrency.MainActor(unsafe) open class StockScrollView : UIKit.UIScrollView {
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open func gestureRecognizerShouldBegin(_ gestureRecognizer: UIKit.UIGestureRecognizer) -> Swift.Bool
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public init(frame: CoreFoundation.CGRect)
+  @_Concurrency.MainActor(unsafe) @objc required dynamic public init?(coder: Foundation.NSCoder)
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @_Concurrency.MainActor(unsafe) open class ChartView<Input> : SmartCandleChart.StockScrollView where Input : SmartCandleChart.Quote {
+  public typealias Renderer = SmartCandleChart.AnyChartRenderer<Input>
+  public typealias Descriptor = SmartCandleChart.ChartDescriptor<Input>
+  public typealias Group = SmartCandleChart.ChartGroup<Input>
+  public typealias Context = SmartCandleChart.RendererContext<Input>
+  @_Concurrency.MainActor(unsafe) open var expectedHeight: CoreFoundation.CGFloat {
+    get
+  }
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open var intrinsicContentSize: CoreFoundation.CGSize {
+    @objc get
+  }
+  @_Concurrency.MainActor(unsafe) open var configuration: SmartCandleChart.Configuration {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) open var chartZoomScale: CoreFoundation.CGFloat {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open var contentInset: UIKit.UIEdgeInsets {
+    @objc get
+    @objc set
+  }
+  @_Concurrency.MainActor(unsafe) open var data: [Input] {
+    get
+  }
+  @_Concurrency.MainActor(unsafe) public var layout: SmartCandleChart.QuoteLayout<Input> {
+    get
+  }
+  @_Concurrency.MainActor(unsafe) open var descriptor: SmartCandleChart.ChartView<Input>.Descriptor {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) open var selectedIndex: Swift.Int? {
+    get
+  }
+  @_Concurrency.MainActor(unsafe) open var onSelect: SmartCandleChart.Delegate<Swift.Int?, Swift.Void>
+  @_Concurrency.MainActor(unsafe) open var onWillDisplayRange: SmartCandleChart.Delegate<Swift.Range<Swift.Int>, Swift.Void>
+  @_Concurrency.MainActor(unsafe) open var onDidDisplayRange: SmartCandleChart.Delegate<Swift.Range<Swift.Int>, Swift.Void>
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public init(frame: CoreFoundation.CGRect)
+  @_Concurrency.MainActor(unsafe) @objc required dynamic public init?(coder: Foundation.NSCoder)
+  @_Concurrency.MainActor(unsafe) public func setNeedRedraw()
+  @_Concurrency.MainActor(unsafe) public func reloadData(_ data: [Input])
+  @_Concurrency.MainActor(unsafe) public func append(_ quote: Input)
+  @_Concurrency.MainActor(unsafe) public func replaceLast(_ quote: Input)
+  @_Concurrency.MainActor(unsafe) public func prepend(_ data: [Input])
+  @_Concurrency.MainActor(unsafe) @objc override dynamic open func layoutSubviews()
+  @objc deinit
+}
+public struct Style {
+  public var captionColor: UIKit.UIColor
+  public var upColor: UIKit.UIColor
+  public var downColor: UIKit.UIColor
+  public var selectionIndicatorLineColor: UIKit.UIColor
+  public var selectionIndicatorPointColor: UIKit.UIColor
+  public init()
+}
+@dynamicMemberLookup public struct Configuration {
+  public var barWidth: CoreFoundation.CGFloat
+  public var spacing: CoreFoundation.CGFloat
+  public var shadowLineWidth: CoreFoundation.CGFloat
+  public var lineWidth: CoreFoundation.CGFloat
+  public var captionFont: UIKit.UIFont
+  public var captionPadding: UIKit.UIEdgeInsets
+  public var captionSpacing: (h: CoreFoundation.CGFloat, v: CoreFoundation.CGFloat)
+  public var gridInterval: (h: CoreFoundation.CGFloat, v: CoreFoundation.CGFloat)
+  public var style: SmartCandleChart.Style
+  public init(barWidth: CoreFoundation.CGFloat = 6, spacing: CoreFoundation.CGFloat = 1, shadowLineWidth: CoreFoundation.CGFloat = 1, lineWidth: CoreFoundation.CGFloat = 1, captionFont: UIKit.UIFont = .systemFont(ofSize: 8), captionPadding: UIKit.UIEdgeInsets = .init(top: 4, left: 8, bottom: 4, right: 8), captionSpacing: (h: CoreFoundation.CGFloat, v: CoreFoundation.CGFloat) = (4, 2), gridInterval: (h: CoreFoundation.CGFloat, v: CoreFoundation.CGFloat) = (120, 50), style: SmartCandleChart.Style = .init())
+}
+extension SmartCandleChart.Configuration {
+  public subscript<V>(dynamicMember keyPath: Swift.WritableKeyPath<SmartCandleChart.Style, V>) -> V {
+    _read
+    _modify
+  }
+  public subscript<V>(dynamicMember keyPath: Swift.KeyPath<SmartCandleChart.Style, V>) -> V {
+    get
+  }
+}
+public struct ReadonlyOffsetArray<Element> {
+  public let offset: Swift.Int
+  public var storage: [Element] {
+    get
+  }
+  public subscript(index: Swift.Int) -> Element? {
+    get
+  }
+}
+extension SmartCandleChart.ReadonlyOffsetArray {
+  public func realRange(for range: Swift.Range<Swift.Int>) -> Swift.Range<Swift.Int>
+}
+extension SmartCandleChart.ReadonlyOffsetArray {
+  public func sliceAndRange(for range: Swift.Range<Swift.Int>) -> (Swift.ArraySlice<Element>, Swift.Range<Swift.Int>)
+}
+public struct IndicatorQuoteProcessor<Input, Element, Key, A> : SmartCandleChart.QuoteProcessing where Input == A.Input, Element : SmartCandleChart.ExtremePointValue, Key : SmartCandleChart.ContextKey, A : SmartCandleChart.AnalysisAlgorithm, Key.Value == SmartCandleChart.ReadonlyOffsetArray<Element>, A.Output == [Element] {
+  public typealias Input = Input
+  public typealias Key = Key
+  public typealias Output = SmartCandleChart.ReadonlyOffsetArray<Element>
+  public var identifier: Key?
+  public init(id: Key? = nil, algorithm: A)
+  public func process(_ data: [Input]) -> SmartCandleChart.ReadonlyOffsetArray<Element>
+}
+extension CoreFoundation.CGRect {
+  public var center: CoreFoundation.CGPoint {
+    get
+  }
+}
+public func + (left: CoreFoundation.CGSize, right: CoreFoundation.CGFloat) -> CoreFoundation.CGSize
+public func - (left: CoreFoundation.CGSize, right: CoreFoundation.CGFloat) -> CoreFoundation.CGSize
+public func - (left: CoreFoundation.CGPoint, right: CoreFoundation.CGPoint) -> CoreFoundation.CGVector
+public func / (left: CoreFoundation.CGVector, right: CoreFoundation.CGFloat) -> CoreFoundation.CGVector
+public func * (left: CoreFoundation.CGVector, right: CoreFoundation.CGFloat) -> CoreFoundation.CGVector
+public func * (left: CoreFoundation.CGPoint, right: CoreFoundation.CGFloat) -> CoreFoundation.CGPoint
+public func + (left: CoreFoundation.CGPoint, right: CoreFoundation.CGVector) -> CoreFoundation.CGPoint
+public func + (left: CoreFoundation.CGPoint, right: CoreFoundation.CGPoint) -> CoreFoundation.CGPoint
+public func + (left: CoreFoundation.CGVector, right: CoreFoundation.CGVector) -> CoreFoundation.CGVector
+public func + (left: CoreFoundation.CGVector?, right: CoreFoundation.CGVector?) -> CoreFoundation.CGVector?
+public func - (left: CoreFoundation.CGPoint, right: CoreFoundation.CGVector) -> CoreFoundation.CGPoint
+extension CoreFoundation.CGPoint {
+  public init(_ vector: CoreFoundation.CGVector)
+}
+extension CoreFoundation.CGVector {
+  public init(_ point: CoreFoundation.CGPoint)
+  public func applying(_ transform: CoreFoundation.CGAffineTransform) -> CoreFoundation.CGVector
+  public func rounding(toScale scale: CoreFoundation.CGFloat) -> CoreFoundation.CGVector
+  public var quadrance: CoreFoundation.CGFloat {
+    get
+  }
+  public var normal: CoreFoundation.CGVector? {
+    get
+  }
+  public var normalized: CoreFoundation.CGVector? {
+    get
+  }
+}
+extension CoreFoundation.CGPoint {
+  public func middle(to another: CoreFoundation.CGPoint) -> CoreFoundation.CGPoint
+}
+extension CoreFoundation.CGVector {
+  public var norm: CoreFoundation.CGFloat {
+    get
+  }
+}
+extension CoreFoundation.CGVector {
+  public func cos(to another: CoreFoundation.CGVector) -> CoreFoundation.CGFloat
+}
+extension CoreFoundation.CGPoint {
+  public func minus(_ another: CoreFoundation.CGPoint) -> CoreFoundation.CGPoint
+  public var distance: CoreFoundation.CGFloat {
+    get
+  }
+}
+final public class CandlestickChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  final public let minHeight: CoreFoundation.CGFloat
+  public init(minHeight: CoreFoundation.CGFloat = 1)
+  final public func setup(in view: SmartCandleChart.ChartView<Input>)
+  final public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  final public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.CandlestickChart<Input>.Context)
+  final public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  final public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  @objc deinit
+}
+@objc @_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers final public class LineChartLayer : SmartCandleChart.ShapeLayer {
+  @objc override dynamic public init()
+  @objc override dynamic public init(layer: Any)
+  final public func updateWithPoints(points: [CoreFoundation.CGPoint])
+  @objc deinit
+}
+extension SmartCandleChart.LineChartLayer {
+  final public func update<Input>(with context: SmartCandleChart.RendererContext<Input>, indicatorValues: SmartCandleChart.ReadonlyOffsetArray<CoreFoundation.CGFloat>, color: UIKit.UIColor, lineWidth: CoreFoundation.CGFloat) where Input : SmartCandleChart.Quote
+}
+extension SmartCandleChart.LineChartLayer {
+  final public func update<Input, V>(with context: SmartCandleChart.RendererContext<Input>, indicatorValues: SmartCandleChart.ReadonlyOffsetArray<V>, keyPath: Swift.KeyPath<V, CoreFoundation.CGFloat>, color: UIKit.UIColor, lineWidth: CoreFoundation.CGFloat) where Input : SmartCandleChart.Quote
+}
+extension SmartCandleChart.LineChartLayer {
+  final public func update<Input, V>(with context: SmartCandleChart.RendererContext<Input>, indicatorValues: SmartCandleChart.ReadonlyOffsetArray<V>, keyPath: Swift.KeyPath<V, CoreFoundation.CGFloat?>, color: UIKit.UIColor, lineWidth: CoreFoundation.CGFloat) where Input : SmartCandleChart.Quote
+}
+public protocol ChartRenderer : AnyObject {
+  associatedtype Input where Self.Input == Self.QuoteProcessor.Input
+  associatedtype QuoteProcessor : SmartCandleChart.QuoteProcessing
+  typealias Context = SmartCandleChart.RendererContext<Self.Input>
+  var quoteProcessor: Self.QuoteProcessor? { get }
+  func captions(quoteIndex: Swift.Int, context: Self.Context) -> [Foundation.NSAttributedString]
+  func setup(in view: SmartCandleChart.ChartView<Self.Input>)
+  func updateZPosition(_ position: CoreFoundation.CGFloat)
+  func render(in view: SmartCandleChart.ChartView<Self.Input>, context: Self.Context)
+  func tearDown(in view: SmartCandleChart.ChartView<Self.Input>)
+  func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+}
+extension SmartCandleChart.ChartRenderer {
+  public var quoteProcessor: Self.QuoteProcessor? {
+    get
+  }
+  public func captions(quoteIndex: Swift.Int, context: Self.Context) -> [Foundation.NSAttributedString]
+}
+public struct AnyChartRenderer<Input> where Input : SmartCandleChart.Quote {
+  public init<R>(_ renderer: R) where Input == R.Input, R : SmartCandleChart.ChartRenderer
+}
+extension SmartCandleChart.AnyChartRenderer : Swift.Equatable {
+  public static func == (lhs: SmartCandleChart.AnyChartRenderer<Input>, rhs: SmartCandleChart.AnyChartRenderer<Input>) -> Swift.Bool
+}
+extension SmartCandleChart.AnyChartRenderer : Swift.Hashable {
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension SmartCandleChart.ChartRenderer where Self.QuoteProcessor.Output : SmartCandleChart.ExtremePointRetrievableCollection {
+  public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+}
+public protocol QuoteProcessing {
+  associatedtype Input : SmartCandleChart.Quote
+  associatedtype Output where Self.Output == Self.Key.Value
+  associatedtype Key : SmartCandleChart.ContextKey
+  var identifier: Self.Key? { get }
+  func process(_ data: [Self.Input]) -> Self.Output
+}
+extension SmartCandleChart.QuoteProcessing {
+  public var identifier: Self.Key? {
+    get
+  }
+  @inlinable internal var absoluteID: Swift.AnyHashable {
+    get {
+        if let id = identifier {
+            return id
+        } else {
+            return ObjectIdentifier(Key.self)
+        }
+    }
+  }
+}
+public struct AnyQuoteProcessor<Input> {
+  public init<P>(_ processor: P) where Input == P.Input, P : SmartCandleChart.QuoteProcessing
+}
+public enum NopeContextKey : SmartCandleChart.ContextKey {
+  public typealias Value = Swift.Void
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.NopeContextKey, b: SmartCandleChart.NopeContextKey) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct NopeQuoteProcessor<Input> : SmartCandleChart.QuoteProcessing where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias Output = Swift.Void
+  public typealias Key = SmartCandleChart.NopeContextKey
+  public func process(_ data: [Input])
+}
+public struct MovingAverageAlgorithm<Input> : SmartCandleChart.AnalysisAlgorithm where Input : SmartCandleChart.Quote {
+  public typealias Output = [CoreFoundation.CGFloat]
+  public let period: Swift.Int
+  public init(period: Swift.Int)
+  public func process(_ data: [Input]) -> [CoreFoundation.CGFloat]
+}
+@_functionBuilder public enum ChartGroupBuilder<I> where I : SmartCandleChart.Quote {
+  public static func buildExpression(_ expression: SmartCandleChart.ChartGroup<I>) -> [SmartCandleChart.ChartGroup<I>]
+  public static func buildBlock(_ components: [SmartCandleChart.ChartGroup<I>]...) -> [SmartCandleChart.ChartGroup<I>]
+  public static func buildIf(_ components: SmartCandleChart.ChartGroup<I>?...) -> [SmartCandleChart.ChartGroup<I>]
+  public static func buildEither(first component: [SmartCandleChart.ChartGroup<I>]) -> [SmartCandleChart.ChartGroup<I>]
+  public static func buildEither(second component: [SmartCandleChart.ChartGroup<I>]) -> [SmartCandleChart.ChartGroup<I>]
+  public static func buildArray(_ components: [[SmartCandleChart.ChartGroup<I>]]) -> [SmartCandleChart.ChartGroup<I>]
+  public static func buildLimitedAvailability(_ component: [SmartCandleChart.ChartGroup<I>]) -> [SmartCandleChart.ChartGroup<I>]
+  public static func buildOptional(_ component: [SmartCandleChart.ChartGroup<I>]?) -> [SmartCandleChart.ChartGroup<I>]
+}
+public class GridIndicator<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  public init(lineWidth: CoreFoundation.CGFloat = 1 / UIScreen.main.scale, color: UIKit.UIColor)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.GridIndicator<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  @objc deinit
+}
+public class YAxisAnnotation<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  public init(formatter: (any SmartCandleChart.NumberFormatting)? = nil, maxWidth: CoreFoundation.CGFloat = 80)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in _: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.YAxisAnnotation<Input>.Context)
+  public func tearDown(in _: SmartCandleChart.ChartView<Input>)
+  public func extremePoint(contextValues _: SmartCandleChart.ContextValues, visibleRange _: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  @objc deinit
+}
+public protocol ContextKey : Swift.Hashable {
+  associatedtype Value
+}
+public enum QuoteContextKey<Input> : SmartCandleChart.ContextKey where Input : SmartCandleChart.Quote {
+  public typealias Value = [Input]
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.QuoteContextKey<Input>, b: SmartCandleChart.QuoteContextKey<Input>) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public struct ContextValues {
+  public subscript<Key>(key: Key.Type) -> Key.Value? where Key : SmartCandleChart.ContextKey {
+    get
+    _modify
+  }
+  public subscript<Key>(key: Key) -> Key.Value? where Key : SmartCandleChart.ContextKey {
+    get
+    _modify
+  }
+}
+public protocol ExtremePointValue {
+  var min: CoreFoundation.CGFloat { get }
+  var max: CoreFoundation.CGFloat { get }
+}
+extension SmartCandleChart.BOLLIndicator : SmartCandleChart.ExtremePointValue {
+  @inline(__always) public var min: CoreFoundation.CGFloat {
+    get
+  }
+  @inline(__always) public var max: CoreFoundation.CGFloat {
+    get
+  }
+}
+extension SmartCandleChart.KDJIndicator : SmartCandleChart.ExtremePointValue {
+  @inline(__always) public var min: CoreFoundation.CGFloat {
+    get
+  }
+  @inline(__always) public var max: CoreFoundation.CGFloat {
+    get
+  }
+}
+extension SmartCandleChart.MACDIndicator : SmartCandleChart.ExtremePointValue {
+  @inline(__always) public var min: CoreFoundation.CGFloat {
+    get
+  }
+  @inline(__always) public var max: CoreFoundation.CGFloat {
+    get
+  }
+}
+extension SmartCandleChart.SARIndicator : SmartCandleChart.ExtremePointValue {
+  @inline(__always) public var min: CoreFoundation.CGFloat {
+    get
+  }
+  @inline(__always) public var max: CoreFoundation.CGFloat {
+    get
+  }
+}
+extension CoreFoundation.CGFloat : SmartCandleChart.ExtremePointValue {
+  @inline(__always) public var min: CoreFoundation.CGFloat {
+    get
+  }
+  @inline(__always) public var max: CoreFoundation.CGFloat {
+    get
+  }
+}
+extension Swift.Double : SmartCandleChart.ExtremePointValue {
+  @inline(__always) public var min: CoreFoundation.CGFloat {
+    get
+  }
+  @inline(__always) public var max: CoreFoundation.CGFloat {
+    get
+  }
+}
+extension Swift.Int : SmartCandleChart.ExtremePointValue {
+  @inline(__always) public var min: CoreFoundation.CGFloat {
+    get
+  }
+  @inline(__always) public var max: CoreFoundation.CGFloat {
+    get
+  }
+}
+extension SmartCandleChart.ReadonlyOffsetArray : SmartCandleChart.ExtremePointRetrievableCollection where Element : SmartCandleChart.ExtremePointValue {
+  public func extremePoint(in range: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+}
+public struct RSIConfiguration : SmartCandleChart.ContextKey {
+  public typealias Value = SmartCandleChart.ReadonlyOffsetArray<CoreFoundation.CGFloat>
+  public var period: Swift.Int
+  public var color: UIKit.UIColor
+  public init(period: Swift.Int, color: UIKit.UIColor)
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.RSIConfiguration, b: SmartCandleChart.RSIConfiguration) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public class RSIChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.IndicatorQuoteProcessor<Input, CoreFoundation.CGFloat, SmartCandleChart.RSIConfiguration, SmartCandleChart.RSIAlgorithm<Input>>
+  final public let quoteProcessor: SmartCandleChart.RSIChart<Input>.QuoteProcessor?
+  public init(configuration: SmartCandleChart.RSIConfiguration)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.RSIChart<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.RSIChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+public protocol Quote {
+  var date: Foundation.Date { get }
+  var low: CoreFoundation.CGFloat { get }
+  var high: CoreFoundation.CGFloat { get }
+  var open: CoreFoundation.CGFloat { get }
+  var close: CoreFoundation.CGFloat { get }
+  var volume: CoreFoundation.CGFloat { get }
+}
+public struct ExponentialMovingAverageAlgorithm<Input> : SmartCandleChart.AnalysisAlgorithm where Input : SmartCandleChart.Quote {
+  public typealias Output = [CoreFoundation.CGFloat]
+  public var period: Swift.Int {
+    get
+  }
+  public init(period: Swift.Int)
+  public func process(_ data: [Input]) -> [CoreFoundation.CGFloat]
+}
+public class SelectedTimeIndicator<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  public var backgroundColor: UIKit.UIColor {
+    get
+    set
+  }
+  public var textColor: UIKit.UIColor {
+    get
+    set
+  }
+  public var formatter: Foundation.DateFormatter
+  public var paddingH: CoreFoundation.CGFloat
+  public init(backgroundColor: UIKit.UIColor = .black, textColor: UIKit.UIColor = .white)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.SelectedTimeIndicator<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  @objc deinit
+}
+public struct EMAConfiguration : SmartCandleChart.ContextKey {
+  public typealias Value = SmartCandleChart.ReadonlyOffsetArray<CoreFoundation.CGFloat>
+  public var lineWidth: CoreFoundation.CGFloat
+  public var period: Swift.Int
+  public var color: UIKit.UIColor
+  public init(period: Swift.Int, color: UIKit.UIColor, lineWidth: CoreFoundation.CGFloat)
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.EMAConfiguration, b: SmartCandleChart.EMAConfiguration) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public class EMAChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.IndicatorQuoteProcessor<Input, CoreFoundation.CGFloat, SmartCandleChart.EMAConfiguration, SmartCandleChart.ExponentialMovingAverageAlgorithm<Input>>
+  final public let quoteProcessor: SmartCandleChart.IndicatorQuoteProcessor<Input, CoreFoundation.CGFloat, SmartCandleChart.EMAConfiguration, SmartCandleChart.ExponentialMovingAverageAlgorithm<Input>>?
+  public init(configuration: SmartCandleChart.EMAConfiguration)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.EMAChart<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.EMAChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+@objc @_inheritsConvenienceInitializers @_Concurrency.MainActor(unsafe) public class IndicatorLabel : UIKit.UIView {
+  public enum Direction {
+    case left
+    case right
+    public static func == (a: SmartCandleChart.IndicatorLabel.Direction, b: SmartCandleChart.IndicatorLabel.Direction) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+  @_Concurrency.MainActor(unsafe) public var triangleWidth: CoreFoundation.CGFloat {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) final public let shapeLayer: SmartCandleChart.ShapeLayer
+  @_Concurrency.MainActor(unsafe) public var triangleDirection: SmartCandleChart.IndicatorLabel.Direction {
+    get
+    set
+  }
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public var frame: CoreFoundation.CGRect {
+    @objc get
+    @objc set
+  }
+  @_Concurrency.MainActor(unsafe) final public let label: UIKit.UILabel
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public init(frame: CoreFoundation.CGRect)
+  @_Concurrency.MainActor(unsafe) @objc required dynamic public init?(coder: Foundation.NSCoder)
+  @_Concurrency.MainActor(unsafe) @objc override dynamic public func sizeThatFits(_ size: CoreFoundation.CGSize) -> CoreFoundation.CGSize
+  @objc deinit
+}
+public struct RSAlgorithm<Input> : SmartCandleChart.AnalysisAlgorithm where Input : SmartCandleChart.Quote {
+  public typealias Output = [CoreFoundation.CGFloat]
+  public let period: Swift.Int
+  public init(period: Swift.Int)
+  public func process(_ data: [Input]) -> [CoreFoundation.CGFloat]
+}
+public struct MACDIndicator : Swift.Equatable {
+  public var diff: CoreFoundation.CGFloat
+  public var dea: CoreFoundation.CGFloat?
+  public var histogram: CoreFoundation.CGFloat?
+  public init(diff: CoreFoundation.CGFloat, dea: CoreFoundation.CGFloat? = nil, histogram: CoreFoundation.CGFloat? = nil)
+  public static func == (a: SmartCandleChart.MACDIndicator, b: SmartCandleChart.MACDIndicator) -> Swift.Bool
+}
+public struct MACDAlgorithm<Input> : SmartCandleChart.AnalysisAlgorithm where Input : SmartCandleChart.Quote {
+  public let shorterPeroid: Swift.Int
+  public let longerPeroid: Swift.Int
+  public let deaPeroid: Swift.Int
+  public typealias Output = [SmartCandleChart.MACDIndicator]
+  public init(shorterPeroid: Swift.Int = 12, longerPeroid: Swift.Int = 26, deaPeroid: Swift.Int = 9)
+  public func process(_ data: [Input]) -> [SmartCandleChart.MACDIndicator]
+}
+extension SmartCandleChart.MACDIndicator : Swift.CustomStringConvertible {
+  public var description: Swift.String {
+    get
+  }
+}
+public struct QuoteLayout<Input> where Input : SmartCandleChart.Quote {
+  public func contentWidth(for data: [Input]) -> CoreFoundation.CGFloat
+  public func visibleRange() -> Swift.Range<Swift.Int>
+  public func contentRectToDraw(visibleRange: Swift.Range<Swift.Int>, y: CoreFoundation.CGFloat, height: CoreFoundation.CGFloat) -> CoreFoundation.CGRect
+}
+extension SmartCandleChart.QuoteLayout {
+  public var barWidth: CoreFoundation.CGFloat {
+    get
+  }
+  public var spacing: CoreFoundation.CGFloat {
+    get
+  }
+  public func quoteMinX(at index: Swift.Int) -> CoreFoundation.CGFloat
+  public func quoteMidX(at index: Swift.Int) -> CoreFoundation.CGFloat
+  public func quoteMaxX(at index: Swift.Int) -> CoreFoundation.CGFloat
+  public func quoteIndex(at point: CoreFoundation.CGPoint) -> Swift.Int?
+  public func horizontalGridCount(width: CoreFoundation.CGFloat) -> Swift.Int
+  public func verticalGridCount(heigt: CoreFoundation.CGFloat) -> Swift.Int
+}
+public struct RendererContext<Input> where Input : SmartCandleChart.Quote {
+  public var data: [Input]
+  public var configuration: SmartCandleChart.Configuration
+  public var layout: SmartCandleChart.QuoteLayout<Input>
+  public var contentRect: CoreFoundation.CGRect
+  public var groupContentRect: CoreFoundation.CGRect
+  public var visibleRange: Swift.Range<Swift.Int>
+  public var contextValues: SmartCandleChart.ContextValues
+  public var extremePoint: (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)
+  public var captionHeight: CoreFoundation.CGFloat
+  public var selectedIndex: Swift.Int?
+  public var indicatorPosition: CoreFoundation.CGPoint?
+  public var preferredFormatter: any SmartCandleChart.NumberFormatting
+}
+extension SmartCandleChart.RendererContext {
+  public subscript<Key>(type: Key.Type) -> Key.Value? where Key : SmartCandleChart.ContextKey {
+    get
+  }
+}
+extension SmartCandleChart.RendererContext {
+  public func yOffset(for value: CoreFoundation.CGFloat) -> CoreFoundation.CGFloat
+  public func xOffsetFetchLatestQuote() -> CoreFoundation.CGFloat
+  public func value(forY y: CoreFoundation.CGFloat) -> CoreFoundation.CGFloat
+}
+public struct KDJConfiguration : SmartCandleChart.ContextKey {
+  public typealias Value = SmartCandleChart.ReadonlyOffsetArray<SmartCandleChart.KDJIndicator>
+  public var k: Swift.Int
+  public var d: Swift.Int
+  public var j: Swift.Int
+  public var kColor: UIKit.UIColor
+  public var dColor: UIKit.UIColor
+  public var jColor: UIKit.UIColor
+  public var kLineWidth: CoreFoundation.CGFloat
+  public var dLineWidth: CoreFoundation.CGFloat
+  public var jLineWidth: CoreFoundation.CGFloat
+  public init(k: Swift.Int, d: Swift.Int, j: Swift.Int, kColor: UIKit.UIColor, dColor: UIKit.UIColor, jColor: UIKit.UIColor, kLineWidth: CoreFoundation.CGFloat = 1, dLineWidth: CoreFoundation.CGFloat = 1, jLineWidth: CoreFoundation.CGFloat = 1)
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.KDJConfiguration, b: SmartCandleChart.KDJConfiguration) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public class KDJChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public var legendConfigBlock: ((Swift.Int, SmartCandleChart.KDJChart<Input>.Context) -> [Foundation.NSAttributedString])?
+  public typealias QuoteProcessor = SmartCandleChart.IndicatorQuoteProcessor<Input, SmartCandleChart.KDJIndicator, SmartCandleChart.KDJConfiguration, SmartCandleChart.KDJAlgorithm<Input>>
+  final public let quoteProcessor: SmartCandleChart.KDJChart<Input>.QuoteProcessor?
+  public init(configuration: SmartCandleChart.KDJConfiguration, legendConfigBlock: ((Swift.Int, SmartCandleChart.KDJChart<Input>.Context) -> [Foundation.NSAttributedString])?)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.KDJChart<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.KDJChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+@inlinable internal func _pixelCeil(_ value: CoreFoundation.CGFloat) -> CoreFoundation.CGFloat {
+    ceil(value * max(1, UIScreen.main.scale)) / max(1, UIScreen.main.scale)
+}
+extension CoreFoundation.CGPoint {
+  @inlinable public var pixelCeiled: CoreFoundation.CGPoint {
+    get { .init(x: _pixelCeil(x), y: _pixelCeil(y)) }
+  }
+}
+extension CoreFoundation.CGSize {
+  @inlinable public var pixelCeiled: CoreFoundation.CGSize {
+    get { .init(width: _pixelCeil(width), height: _pixelCeil(height)) }
+  }
+}
+extension CoreFoundation.CGRect {
+  @inlinable public var pixelCeiled: CoreFoundation.CGRect {
+    get { .init(origin: origin.pixelCeiled, size: size.pixelCeiled) }
+  }
+}
+final public class VolumeChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  final public var legendConfigBlock: ((Swift.Int, SmartCandleChart.VolumeChart<Input>.Context) -> [Foundation.NSAttributedString])?
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  final public let minHeight: CoreFoundation.CGFloat
+  public init(minHeight: CoreFoundation.CGFloat = 1, legendConfigBlock: ((Swift.Int, SmartCandleChart.VolumeChart<Input>.Context) -> [Foundation.NSAttributedString])?)
+  final public func setup(in view: SmartCandleChart.ChartView<Input>)
+  final public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  final public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.VolumeChart<Input>.Context)
+  final public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  final public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  final public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.VolumeChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+public struct MACDConfiguration : SmartCandleChart.ContextKey {
+  public typealias Value = SmartCandleChart.ReadonlyOffsetArray<SmartCandleChart.MACDIndicator>
+  public var shorterPeroid: Swift.Int
+  public var longerPeroid: Swift.Int
+  public var deaPeroid: Swift.Int
+  public var diffColor: UIKit.UIColor
+  public var deaColor: UIKit.UIColor
+  public var minBarHeight: CoreFoundation.CGFloat
+  public var diffLineWidth: CoreFoundation.CGFloat
+  public var deaLineWidth: CoreFoundation.CGFloat
+  public var longIncreasingIsHollow: Swift.Bool
+  public var longDecreasingIsHollow: Swift.Bool
+  public var shortIncreasingIsHollow: Swift.Bool
+  public var shortDecreasingIsHollow: Swift.Bool
+  public var showDIF: Swift.Bool
+  public var showDEA: Swift.Bool
+  public init(shorterPeroid: Swift.Int = 12, longerPeroid: Swift.Int = 26, deaPeroid: Swift.Int = 9, diffColor: UIKit.UIColor, deaColor: UIKit.UIColor, minBarHeight: CoreFoundation.CGFloat = 1, diffLineWidth: CoreFoundation.CGFloat = 1, deaLineWidth: CoreFoundation.CGFloat = 1, longIncreasingIsHollow: Swift.Bool = false, longDecreasingIsHollow: Swift.Bool = false, shortIncreasingIsHollow: Swift.Bool = false, shortDecreasingIsHollow: Swift.Bool = false, showDIF: Swift.Bool = true, showDEA: Swift.Bool = true)
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.MACDConfiguration, b: SmartCandleChart.MACDConfiguration) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public class MACDChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.IndicatorQuoteProcessor<Input, SmartCandleChart.MACDIndicator, SmartCandleChart.MACDConfiguration, SmartCandleChart.MACDAlgorithm<Input>>
+  final public let quoteProcessor: SmartCandleChart.MACDChart<Input>.QuoteProcessor?
+  public init(configuration: SmartCandleChart.MACDConfiguration, macdLegendColor: UIKit.UIColor, upColor: UIKit.UIColor, downColor: UIKit.UIColor)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.MACDChart<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.MACDChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+public struct KDJIndicator : Swift.Equatable {
+  public var k: CoreFoundation.CGFloat
+  public var d: CoreFoundation.CGFloat
+  public var j: CoreFoundation.CGFloat
+  public static func == (a: SmartCandleChart.KDJIndicator, b: SmartCandleChart.KDJIndicator) -> Swift.Bool
+}
+public struct KDJAlgorithm<Input> : SmartCandleChart.AnalysisAlgorithm where Input : SmartCandleChart.Quote {
+  public typealias Output = [SmartCandleChart.KDJIndicator]
+  public let period: Swift.Int
+  public let kPeriod: Swift.Int
+  public let dPeriod: Swift.Int
+  public init(period: Swift.Int = 9, kPeriod: Swift.Int = 3, dPeriod: Swift.Int = 3)
+  public func process(_ data: [Input]) -> [SmartCandleChart.KDJIndicator]
+}
+final public class Delegate<Input, Output> {
+  public init()
+  final public func delegate<Target>(on target: Target, action: @escaping (Target, Input) -> Output) where Target : AnyObject
+  final public func callAsFunction(_ input: Input) -> Output?
+  @objc deinit
+}
+public struct SARConfiguration : SmartCandleChart.ContextKey {
+  public typealias Value = SmartCandleChart.ReadonlyOffsetArray<SmartCandleChart.SARIndicator>
+  public var period: Swift.Int
+  public var minAF: CoreFoundation.CGFloat
+  public var maxAF: CoreFoundation.CGFloat
+  public var upColor: UIKit.UIColor
+  public var downColor: UIKit.UIColor
+  public var reversalColor: UIKit.UIColor
+  public var fillColor: UIKit.UIColor
+  public init(period: Swift.Int = 4, minAF: CoreFoundation.CGFloat = 0.02, maxAF: CoreFoundation.CGFloat = 0.2, upColor: UIKit.UIColor, downColor: UIKit.UIColor, reversalColor: UIKit.UIColor, fillColor: UIKit.UIColor = .white)
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.SARConfiguration, b: SmartCandleChart.SARConfiguration) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public class SARChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.IndicatorQuoteProcessor<Input, SmartCandleChart.SARIndicator, SmartCandleChart.SARConfiguration, SmartCandleChart.SARAlgorithm<Input>>
+  final public let quoteProcessor: SmartCandleChart.SARChart<Input>.QuoteProcessor?
+  public init(configuration: SmartCandleChart.SARConfiguration)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.SARChart<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.SARChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+@objc @_inheritsConvenienceInitializers public class ShapeLayer : QuartzCore.CAShapeLayer {
+  @objc override dynamic public func action(forKey event: Swift.String) -> (any QuartzCore.CAAction)?
+  @objc override dynamic public class func defaultAction(forKey event: Swift.String) -> (any QuartzCore.CAAction)?
+  public func clear()
+  @objc override dynamic public init()
+  @objc override dynamic public init(layer: Any)
+  @objc required dynamic public init?(coder: Foundation.NSCoder)
+  @objc deinit
+}
+public protocol ExtremePointRetrievableCollection {
+  func extremePoint(in range: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+}
+public struct ChartDescriptor<Input> where Input : SmartCandleChart.Quote {
+  public let spacing: CoreFoundation.CGFloat
+  public let groups: [SmartCandleChart.ChartGroup<Input>]
+  public typealias Builder = SmartCandleChart.ChartGroupBuilder<Input>
+  public init(spacing: CoreFoundation.CGFloat = 0, @SmartCandleChart.ChartDescriptor<Input>.Builder groups: () -> [SmartCandleChart.ChartGroup<Input>])
+}
+public struct ChartGroup<Input> where Input : SmartCandleChart.Quote {
+  public var height: CoreFoundation.CGFloat
+  public var chartPadding: (top: CoreFoundation.CGFloat, bottom: CoreFoundation.CGFloat)
+  public var charts: [SmartCandleChart.AnyChartRenderer<Input>]
+  public var preferredFormatter: any SmartCandleChart.NumberFormatting
+  public typealias Builder = SmartCandleChart.ChartRendererBuilder<Input>
+  public init(height: CoreFoundation.CGFloat, preferredFormatter: any SmartCandleChart.NumberFormatting = NumberFormatter(), chartPadding: (top: CoreFoundation.CGFloat, bottom: CoreFoundation.CGFloat) = (0, 0), @SmartCandleChart.ChartGroup<Input>.Builder charts: () -> [SmartCandleChart.AnyChartRenderer<Input>])
+}
+public class SelectedYIndicator<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  public init(height: CoreFoundation.CGFloat = 12, minWidth: CoreFoundation.CGFloat = 36, maxWidth: CoreFoundation.CGFloat = 80, background: UIKit.UIColor = .red, textColor: UIKit.UIColor = .white)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.SelectedYIndicator<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  @objc deinit
+}
+public struct SARIndicator : Swift.Equatable {
+  public var sar: CoreFoundation.CGFloat
+  public var isReversal: Swift.Bool
+  public var isUp: Swift.Bool
+  public init(sar: CoreFoundation.CGFloat, isReversal: Swift.Bool, isUp: Swift.Bool)
+  public static func == (a: SmartCandleChart.SARIndicator, b: SmartCandleChart.SARIndicator) -> Swift.Bool
+}
+public struct SARAlgorithm<Input> : SmartCandleChart.AnalysisAlgorithm where Input : SmartCandleChart.Quote {
+  public typealias Output = [SmartCandleChart.SARIndicator]
+  public let period: Swift.Int
+  public let minAF: CoreFoundation.CGFloat
+  public let maxAF: CoreFoundation.CGFloat
+  public init(period: Swift.Int = 4, minAF: CoreFoundation.CGFloat = 0.02, maxAF: CoreFoundation.CGFloat = 0.2)
+  public func process(_ data: [Input]) -> [SmartCandleChart.SARIndicator]
+}
+public class TimeAnnotation<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  public init(dateFormat: Swift.String)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.TimeAnnotation<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  @objc deinit
+}
+final public class TimeShareChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.NopeQuoteProcessor<Input>
+  final public var color: UIKit.UIColor {
+    get
+    set
+  }
+  public init(color: UIKit.UIColor)
+  final public func setup(in view: SmartCandleChart.ChartView<Input>)
+  final public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  final public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.TimeShareChart<Input>.Context)
+  final public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  final public func extremePoint(contextValues: SmartCandleChart.ContextValues, visibleRange: Swift.Range<Swift.Int>) -> (min: CoreFoundation.CGFloat, max: CoreFoundation.CGFloat)?
+  final public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.TimeShareChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+public struct RSIAlgorithm<Input> : SmartCandleChart.AnalysisAlgorithm where Input : SmartCandleChart.Quote {
+  public typealias Output = [CoreFoundation.CGFloat]
+  public let period: Swift.Int
+  public init(period: Swift.Int)
+  public func process(_ data: [Input]) -> [CoreFoundation.CGFloat]
+}
+@_functionBuilder public enum ChartRendererBuilder<I> where I : SmartCandleChart.Quote {
+  public static func buildExpression<R>(_ expression: R) -> [SmartCandleChart.AnyChartRenderer<I>] where I == R.Input, R : SmartCandleChart.ChartRenderer
+  public static func buildExpression(_ expression: [SmartCandleChart.AnyChartRenderer<I>]) -> [SmartCandleChart.AnyChartRenderer<I>]
+  public static func buildExpression<R>(_ expression: [R]) -> [SmartCandleChart.AnyChartRenderer<I>] where I == R.Input, R : SmartCandleChart.ChartRenderer
+  public static func buildBlock(_ components: [SmartCandleChart.AnyChartRenderer<I>]...) -> [SmartCandleChart.AnyChartRenderer<I>]
+  public static func buildIf(_ components: SmartCandleChart.AnyChartRenderer<I>?...) -> [SmartCandleChart.AnyChartRenderer<I>]
+  public static func buildEither(first component: [SmartCandleChart.AnyChartRenderer<I>]) -> [SmartCandleChart.AnyChartRenderer<I>]
+  public static func buildEither(second component: [SmartCandleChart.AnyChartRenderer<I>]) -> [SmartCandleChart.AnyChartRenderer<I>]
+  public static func buildArray(_ components: [[SmartCandleChart.AnyChartRenderer<I>]]) -> [SmartCandleChart.AnyChartRenderer<I>]
+  public static func buildLimitedAvailability(_ component: [SmartCandleChart.AnyChartRenderer<I>]) -> [SmartCandleChart.AnyChartRenderer<I>]
+  public static func buildOptional(_ component: [SmartCandleChart.AnyChartRenderer<I>]?) -> [SmartCandleChart.AnyChartRenderer<I>]
+}
+public struct MAConfiguration : SmartCandleChart.ContextKey {
+  public typealias Value = SmartCandleChart.ReadonlyOffsetArray<CoreFoundation.CGFloat>
+  public var lineWidth: CoreFoundation.CGFloat
+  public var period: Swift.Int
+  public var color: UIKit.UIColor
+  public init(period: Swift.Int, color: UIKit.UIColor, lineWidth: CoreFoundation.CGFloat)
+  public func hash(into hasher: inout Swift.Hasher)
+  public static func == (a: SmartCandleChart.MAConfiguration, b: SmartCandleChart.MAConfiguration) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public class MAChart<Input> : SmartCandleChart.ChartRenderer where Input : SmartCandleChart.Quote {
+  public typealias Input = Input
+  public typealias QuoteProcessor = SmartCandleChart.IndicatorQuoteProcessor<Input, CoreFoundation.CGFloat, SmartCandleChart.MAConfiguration, SmartCandleChart.MovingAverageAlgorithm<Input>>
+  final public let quoteProcessor: SmartCandleChart.IndicatorQuoteProcessor<Input, CoreFoundation.CGFloat, SmartCandleChart.MAConfiguration, SmartCandleChart.MovingAverageAlgorithm<Input>>?
+  public init(configuration: SmartCandleChart.MAConfiguration)
+  public func updateZPosition(_ position: CoreFoundation.CGFloat)
+  public func setup(in view: SmartCandleChart.ChartView<Input>)
+  public func render(in view: SmartCandleChart.ChartView<Input>, context: SmartCandleChart.MAChart<Input>.Context)
+  public func tearDown(in view: SmartCandleChart.ChartView<Input>)
+  public func captions(quoteIndex: Swift.Int, context: SmartCandleChart.MAChart<Input>.Context) -> [Foundation.NSAttributedString]
+  @objc deinit
+}
+public struct BOLLIndicator : Swift.Equatable {
+  public var lower: CoreFoundation.CGFloat
+  public var middle: CoreFoundation.CGFloat
+  public var upper: CoreFoundation.CGFloat
+  public init(lower: CoreFoundation.CGFloat, middle: CoreFoundation.CGFloat, upper: CoreFoundation.CGFloat)
+  public static func == (a: SmartCandleChart.BOLLIndicator, b: SmartCandleChart.BOLLIndicator) -> Swift.Bool
+}
+public struct BollingerBandsAlgorithm<Input> : SmartCandleChart.AnalysisAlgorithm where Input : SmartCandleChart.Quote {
+  public typealias Output = [SmartCandleChart.BOLLIndicator]
+  public let period: Swift.Int
+  public let standardDeviationMultiplier: CoreFoundation.CGFloat
+  public init(period: Swift.Int = 20, standardDeviationMultiplier: CoreFoundation.CGFloat = 2)
+  public func process(_ data: [Input]) -> [SmartCandleChart.BOLLIndicator]
+}
+extension SmartCandleChart.IndicatorLabel.Direction : Swift.Equatable {}
+extension SmartCandleChart.IndicatorLabel.Direction : Swift.Hashable {}

@@ -1,0 +1,10 @@
+xcodebuild -create-xcframework \
+-framework [path]/name.framework \
+-framework [path]/name.framework \
+-output [path]/name.xcframework
+
+Build active architecture only no
+Defines module yes
+Mach-o type dynamic library
+
+s.source_files = 'Pod/Classes/**/*'

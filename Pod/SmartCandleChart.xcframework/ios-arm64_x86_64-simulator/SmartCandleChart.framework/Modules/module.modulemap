@@ -1,0 +1,6 @@
+framework module SmartCandleChart {
+  umbrella header "SmartCandleChart.h"
+  export *
+
+  module * { export * }
+}
