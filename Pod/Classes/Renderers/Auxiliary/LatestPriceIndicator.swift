@@ -57,9 +57,10 @@ extension LatestPriceIndicator {
                 shapeLayer.fillColor = UIColor.clear.cgColor
                 shapeLayer.lineDashPattern = [2, 2]
                 shapeLayer.lineWidth = 1
-                shapeLayer.lineJoin = .round
-                shapeLayer.strokeColor = color.cgColor
+                let round = CAShapeLayerLineJoin(rawValue: "round")
+                shapeLayer.lineJoin = round
                 
+                shapeLayer.strokeColor = color.cgColor
                 let path = UIBezierPath()
                 path.move(to: CGPoint(x: bounds.minX, y: bounds.midY))
                 path.addLine(to: CGPoint(x: bounds.maxX, y: bounds.midY))
@@ -73,7 +74,7 @@ extension LatestPriceIndicator {
 
 extension LatestPriceIndicator {
     
-    class Label: UILabel {
+    public class Label: UILabel {
 
         var priceDecimal: Int = 0
         
@@ -95,7 +96,7 @@ extension LatestPriceIndicator {
             displayLink = nil
         }
         
-        override var text: String? {
+        public override var text: String? {
             didSet {
                 guard let value = Double(text ?? "0") else { return }
                 let old = Double(oldValue ?? "0") ?? 0
@@ -103,20 +104,20 @@ extension LatestPriceIndicator {
             }
         }
         
-        override func draw(_ rect: CGRect) {
+        public override func draw(_ rect: CGRect) {
             let insets = contentInsets
-            super.drawText(in: rect.inset(by: insets))
+            super.drawText(in: rect.insetBy(dx: insets.left + insets.right, dy: insets.bottom + insets.top))
         }
         
-        override func textRect(forBounds bounds: CGRect, limitedToNumberOfLines numberOfLines: Int) -> CGRect {
+        public override func textRect(forBounds bounds: CGRect, limitedToNumberOfLines numberOfLines: Int) -> CGRect {
             let insets = contentInsets
-            let insetRect = bounds.inset(by: insets)
+            let insetRect = bounds.insetBy(dx: insets.left + insets.right, dy: insets.bottom + insets.top)
             let textRect = super.textRect(forBounds: insetRect, limitedToNumberOfLines: numberOfLines)
             let invertedInsets = UIEdgeInsets(top: -insets.top, left: -insets.left, bottom: -insets.bottom, right: -insets.right)
-            return textRect.inset(by: invertedInsets)
+            return textRect.insetBy(dx: invertedInsets.left + invertedInsets.right, dy: invertedInsets.top + invertedInsets.bottom)
         }
         
-        override var intrinsicContentSize: CGSize {
+        public override var intrinsicContentSize: CGSize {
             let size = super.intrinsicContentSize
             let width = size.width + contentInsets.left + contentInsets.right
             let height = size.height + contentInsets.top + contentInsets.bottom
@@ -131,7 +132,7 @@ extension LatestPriceIndicator {
             startTime = CACurrentMediaTime()
             
             displayLink = CADisplayLink(target: self, selector: #selector(LatestPriceIndicator.Label.updateValue))
-            displayLink?.add(to: .main, forMode: .common)
+            displayLink?.add(to: .main, forMode: RunLoop.Mode.common)
         }
         
         @objc
@@ -188,7 +189,7 @@ public class LatestPriceIndicator<Input: Quote>: ChartRenderer {
     public typealias Input = Input
     public typealias QuoteProcessor = NopeQuoteProcessor<Input>
     
-    private lazy var label: Label = {
+    public lazy var label: Label = {
         let it = Label(frame: .zero)
         it.font = UIFont.systemFont(ofSize: 10)
         it.textColor = textColor
