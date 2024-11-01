@@ -57,8 +57,8 @@ extension LatestPriceIndicator {
                 shapeLayer.fillColor = UIColor.clear.cgColor
                 shapeLayer.lineDashPattern = [2, 2]
                 shapeLayer.lineWidth = 1
-                let round = CAShapeLayerLineJoin(rawValue: "round")
-                shapeLayer.lineJoin = round
+                let round = CAShapeLayerLineJoin(string: "round")
+                shapeLayer.lineJoin = round as String
                 
                 shapeLayer.strokeColor = color.cgColor
                 let path = UIBezierPath()
@@ -132,7 +132,7 @@ extension LatestPriceIndicator {
             startTime = CACurrentMediaTime()
             
             displayLink = CADisplayLink(target: self, selector: #selector(LatestPriceIndicator.Label.updateValue))
-            displayLink?.add(to: .main, forMode: RunLoop.Mode.common)
+            displayLink?.add(to: .main, forMode: Foundation.RunLoop.Mode.commonModes)
         }
         
         @objc
